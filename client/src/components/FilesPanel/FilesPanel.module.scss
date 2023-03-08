@@ -1,0 +1,17 @@
+@import "../../styles/globals.scss";
+
+$imgPadding: $paddingDefault;
+
+.files {
+    @extend .panel;
+    max-width: 512px;
+    header {
+        @extend .header;
+    }
+    .content {
+        img {
+            width: calc(50% - $imgPadding * 2);
+            padding: $imgPadding;
+        }
+    }
+}

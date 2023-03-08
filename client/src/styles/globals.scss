@@ -1,0 +1,23 @@
+$fg: #000000;
+$bg: #ffffff;
+$mg: #888888;
+
+$paddingDefault: 8px;
+$borderRadiusDefault: 8px;
+$borderDefault: solid 1px $mg;
+
+.panel {
+    border-radius: $borderRadiusDefault;
+    border: $borderDefault;
+    .content {
+        padding: $paddingDefault;
+    }
+}
+
+.header {
+    padding: $paddingDefault;
+    background-color: $mg;
+    color: $bg;
+    border-top-right-radius: $borderRadiusDefault;
+    border-top-left-radius: $borderRadiusDefault;
+}
