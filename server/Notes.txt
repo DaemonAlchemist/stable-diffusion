@@ -1,0 +1,9 @@
+Installation Notes
+==================
+> pip install --upgrade diffusers[torch]
+
+> TODO: Install torch with CUDA support
+
+> pip install opencv-contrib-python
+
+> pip install fastapi[all]
