@@ -7,6 +7,7 @@ import { useInput } from '@/lib/useInput';
 import { api } from '@/lib/api';
 import { pipe, prop } from 'ts-functional';
 import { apiBase } from '@/lib/config';
+import { StatusBar } from '../StatusBar';
 
 export const Text2ImageComponent = (props:Text2ImageProps) => {
     const [lastImage, setLastImage] = useState("");
@@ -28,6 +29,7 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
             <Col xs={18}>
                 <div className={styles.imgContainer}>
                     {!!lastImage && <img src={`${apiBase}/${lastImage}`} />}
+                    <StatusBar />
                 </div>
             </Col>
         </Row>

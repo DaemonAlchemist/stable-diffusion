@@ -12,4 +12,4 @@ def addPath(file:str):
 @router.get("/files")
 def getHandler():
     files = listdir(getcwd() + "\\" + outputFilePath)
-    return [addPath(file) for file in files]
+    return [addPath(file) for file in files if file != ".gitignore"]

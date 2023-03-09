@@ -1,0 +1,18 @@
+@import "../../styles/globals.scss";
+
+.statusBar {
+    background: #000000;
+    border: solid 1px;
+    position: relative;
+    height: 1.5em;
+    .status {
+        position: absolute;
+        display: inline-block;
+        padding: 0 0 0 8px;
+        z-index: 999;
+    }
+    .progress {
+        position: absolute;
+        background: #004400;
+    }
+}
