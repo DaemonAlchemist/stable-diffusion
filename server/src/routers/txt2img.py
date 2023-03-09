@@ -1,12 +1,16 @@
-from fastapi import APIRouter
+from logging import warning
+from random import randint
 
 import torch
-from logging import warning
 from diffusers import StableDiffusionPipeline
+from diffusers.schedulers import (DDIMScheduler, DDPMScheduler,
+                                  DPMSolverMultistepScheduler,
+                                  EulerAncestralDiscreteScheduler,
+                                  EulerDiscreteScheduler, LMSDiscreteScheduler,
+                                  PNDMScheduler)
+from fastapi import APIRouter
 from src.lib.status import Status
 from src.routers.files import outputFilePath
-
-from random import randint
 
 router = APIRouter()
 status = Status()
@@ -16,10 +20,23 @@ def step(step, timestep, latents):
     status.updateIter(step)
 
 @router.get("/txt2img")
-def txt2imgHandler(prompt:str, width:int, height:int, numSteps:int=150, cfgScale:float = 7.5):
+def txt2imgHandler(prompt:str, width:int, height:int, numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM"):
+
     # Startup the pipeline
     status.start(numSteps)
-    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16, safe_checker=None)
+    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16, safety_checker=None)
+    
+    # Instantiate the scheduler
+    scheduler = {
+        "DDIM": DDIMScheduler,
+        "DDPM": DDPMScheduler,
+        "DPM": DPMSolverMultistepScheduler,
+        "EulerAncestral": EulerAncestralDiscreteScheduler,
+        "EulerDiscrete": EulerDiscreteScheduler,
+        "LMS": LMSDiscreteScheduler,
+        "PNDM": PNDMScheduler,
+    }[sampler].from_config(pipe.scheduler.config)
+
     pipe = pipe.to("cuda")
 
     # Generate the image
