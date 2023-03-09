@@ -1,11 +1,24 @@
 @import "../../styles/globals.scss";
 
 .txt2Img {
+    .imgCell {
+        width: 1024px;
+        height: 1024px;
+    }
+    h1 {
+        button {
+            float: right;
+        }
+    }
+    b {
+        float: right;
+        padding-right: 8px;
+    }
     .imgContainer {
-        width: 512px;
-        height: 512px;
         border: solid 1px;
         padding: $paddingDefault;
+        position: relative;
+        overflow: hidden;
         img {
             width: 100%;
         }

@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import React, { useEffect, useState } from 'react';
 import {StatusBarProps} from "./StatusBar.d";
 import styles from './StatusBar.module.scss';
+import {Progress} from 'antd';
 
 interface IStatus {
     maxIterations: number;
@@ -22,10 +23,7 @@ export const StatusBarComponent = (props:StatusBarProps) => {
         return () => window.clearInterval(timer);
     }, []);
     
-    return <>
-        {!!status && <div className={styles.statusBar}>
-            <div className={styles.progress} style={{width: `${status.percentComplete}%`}}>&nbsp;</div>
-            <span className={styles.status}>{status.status}</span>
-        </div>}
-    </>;
+    return <div className={styles.statusBar}>
+        {!!status && <Progress percent={status.percentComplete} format={() => status.status} />}
+    </div>;
 }
