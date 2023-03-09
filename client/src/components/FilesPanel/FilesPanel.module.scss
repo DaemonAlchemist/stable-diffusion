@@ -3,15 +3,13 @@
 $imgPadding: $paddingDefault;
 
 .files {
-    @extend .panel;
-    max-width: 512px;
-    header {
-        @extend .header;
+    & > div:nth-child(2) {
+        padding: 0;
     }
     .content {
         img {
-            width: calc(50% - $imgPadding * 2);
-            padding: $imgPadding;
+            width: calc(50% - $imgPadding);
+            margin: $imgPadding / 2;
         }
     }
 }

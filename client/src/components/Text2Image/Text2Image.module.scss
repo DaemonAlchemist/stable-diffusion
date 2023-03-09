@@ -1,0 +1,13 @@
+@import "../../styles/globals.scss";
+
+.txt2Img {
+    .imgContainer {
+        width: 512px;
+        height: 512px;
+        border: solid 1px;
+        padding: $paddingDefault;
+        img {
+            width: 100%;
+        }
+    }
+}

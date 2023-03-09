@@ -19,7 +19,7 @@ def step(step, timestep, latents):
 def txt2imgHandler(prompt:str, num_steps:int=150):
     # Startup the pipeline
     status.start(num_steps)
-    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16)
+    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16, safe_checker=None)
     pipe = pipe.to("cuda")
 
     # Generate the image
@@ -28,7 +28,7 @@ def txt2imgHandler(prompt:str, num_steps:int=150):
 
     # Save the final image
     status.updateStatus("Saving image")
-    fileName = outputFilePath + "/{}-{}.png".format(prompt, randint(0, 1000000))
+    fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
     image.save(fileName)
 
     # Update the status

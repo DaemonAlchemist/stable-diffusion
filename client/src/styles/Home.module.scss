@@ -1,0 +1,13 @@
+@import "./globals.scss";
+
+section.app {
+    min-height: 100vh;
+    margin: -8px !important;
+    .content {
+        padding: $paddingDefault;
+        color: #ffffff;
+    }
+    .rightSider {
+        padding: $paddingDefault;
+    }
+}
