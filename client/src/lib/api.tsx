@@ -7,6 +7,9 @@ export const api = {
         .set({
             Accepts: 'application/json',
         })
-        .query(query)
+        .query(Object.keys(query)
+            .filter(k => !!query[k])
+            .reduce((a, k) => ({ ...a, [k]: query[k] }), {})
+        )
         .then((response:any) => response.body as T),
 }

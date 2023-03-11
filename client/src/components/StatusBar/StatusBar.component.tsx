@@ -19,7 +19,7 @@ export const StatusBarComponent = (props:StatusBarProps) => {
     }
 
     useEffect(() => {
-        const timer = window.setInterval(refresh, 1000);
+        const timer = window.setInterval(refresh, 250);
         return () => window.clearInterval(timer);
     }, []);
     

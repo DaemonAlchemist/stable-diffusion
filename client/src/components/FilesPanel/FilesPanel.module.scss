@@ -7,9 +7,30 @@ $imgPadding: $paddingDefault;
         padding: 0;
     }
     .content {
-        img {
-            width: calc(50% - $imgPadding);
+        max-height: calc(100vh - 150px);
+        overflow-y: scroll;
+        overflow-x: hidden;
+        div {
+            display: inline-block;
+            width: calc(33% - $imgPadding);
             margin: $imgPadding / 2;
+            border: solid 2px #000000;
+            &.selected {
+                border-color: $highlight;
+                position: relative;
+                &::after {
+                    content: "✔";
+                    position: absolute;
+                    left: calc(50% - 24px);
+                    top: calc(50% - 48px);
+                    z-index: 999;
+                    color: $highlight;
+                    font-size: 48px;
+                }
+            }
+            img {
+                width: 100%;
+            }
         }
     }
 }

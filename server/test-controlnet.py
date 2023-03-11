@@ -11,7 +11,7 @@ from PIL import Image
 # Let's load the popular vermeer image
 image = load_image(
     # "https://hf.co/datasets/huggingface/documentation-images/resolve/main/diffusers/input_image_vermeer.png"
-    os.path.join(os.getcwd(), 'amber-base.jpg')
+    os.path.join(os.getcwd(), 'kirnen.jpg')
 )
 
 image = np.array(image)
@@ -35,7 +35,7 @@ pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
 pipe.enable_model_cpu_offload()
 
 out_image = pipe(
-    "demon girl on fire, high quality, trending on artstation", num_inference_steps=150, image=canny_image, guidance_scale=7.5
+    "anime man in a stylish tunic, high quality, trending on artstation", num_inference_steps=150, image=canny_image, guidance_scale=7.5
 ).images[0]
 
-out_image.save("test-controlnet4.png")
+out_image.save("kirnen-variation2.png")

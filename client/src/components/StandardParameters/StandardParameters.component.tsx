@@ -12,7 +12,7 @@ export const StandardParametersComponent = (props:StandardParametersProps) => {
         <p>Image Height <b>{params.height} px</b><Slider min={0} max={1024} step={64} value={params.height} onChange={params.setHeight} marks={{0: " ", 1024: " "}}/></p>
     </Col>
     <Col xs={12}>
-        <p>Creativity <b>{params.cfgScale}</b><Slider min={1} max={20} step={0.1} value={params.cfgScale} onChange={params.setCfgScale} marks={{1: "more", 20: "less"}}/></p>
+        <p>Prompt Strength <b>{params.cfgScale}</b><Slider min={1} max={20} step={0.1} value={params.cfgScale} onChange={params.setCfgScale} marks={{1: "ignore", 20: "follow"}}/></p>
         <p>Quality <b>{params.numSteps} steps</b><Slider min={1} max={300} step={1} value={params.numSteps} onChange={params.setNumSteps} marks={{0: "faster", 300: "better"}}/></p>
     </Col>
 </Row>

@@ -15,7 +15,7 @@ export default function Home() {
         <Layout.Content className={styles.content}>
           <Text2Image />
         </Layout.Content>
-        <Layout.Sider className={styles.rightSider} width={256}>
+        <Layout.Sider className={styles.rightSider} width={384}>
           <FilesPanel />
         </Layout.Sider>
       </Layout>

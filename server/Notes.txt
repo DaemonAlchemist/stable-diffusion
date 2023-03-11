@@ -4,8 +4,4 @@ Installation Notes
 
 > TODO: Notes to install torch with CUDA support (also possibly uninstall torch with CPU support)
 
-> pip install opencv-contrib-python
-
-> pip install fastapi[all]
-
-> pip install scipy
+> pip install opencv-contrib-python scipy fastapi[all] python-multipart transformers controlnet_aux git+https://github.com/huggingface/accelerate.git
