@@ -13,6 +13,7 @@ This is a project I started for two reason:
 - Unified interface
   - Text-to-Image and Image-to-Image workflows are integrated into one workflow.
 - ControlNet support
+- Batch processing
 
 ## Planned features
 - Face restoration

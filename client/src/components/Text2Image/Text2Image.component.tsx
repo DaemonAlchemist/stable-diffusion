@@ -52,13 +52,13 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                         <StatusBar />
                     </Col>
                     <Col xs={24} className={styles.createButtons}>
+                    <Input addonBefore="Create image(s)" type="number" style={{width: 200}} value={+numImages} onChange={setNumImages}/>
                     <Button type="primary" onClick={onCreate} title="Create with a new seed">
                             <PlayCircleOutlined />
                     </Button>
                     <Button type="primary" onClick={onRedo} title="Reuse the last seed">
                         <ReloadOutlined />
                     </Button>
-                    <Input type="number" style={{width: 75}} value={+numImages} onChange={setNumImages}/>
                     </Col>
                 </Row>
                 <p>Prompt</p>

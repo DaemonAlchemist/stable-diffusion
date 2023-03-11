@@ -3,14 +3,17 @@
 .txt2Img {
     .createButtons {
         text-align: right;
-        button:first-child {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
+        button:nth-child(2) {
+            border-radius: 0;
             border-right: solid 1px #ffffff;
         }
-        button:last-child {
+        button:nth-child(3) {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+        }
+        input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
         }
     }
     .imgCell {
