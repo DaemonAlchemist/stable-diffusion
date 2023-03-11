@@ -135,6 +135,7 @@ def segments(baseImage:np.ndarray):
 
     color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
 
+    # TODO Where does the ade_palette function come from?
     palette = np.array(ade_palette())
 
     for label, color in enumerate(palette):
@@ -146,7 +147,7 @@ def segments(baseImage:np.ndarray):
 
 @router.get("/txt2img")
 def txt2imgHandler(
-    prompt:str,
+    prompt:str, seed:int,
     width:int, height:int,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
@@ -172,16 +173,19 @@ def txt2imgHandler(
     pipe = pipe.to("cuda")
 
     # Generate the image
+    generator = torch.Generator("cuda").manual_seed(seed)
     status.updateStatus("Generating")
     image = pipe(
         prompt, width=width, height=height,
         num_inference_steps=numSteps, guidance_scale=cfgScale,
         image=getControlNetImage(controlNetImage, preprocessor),
         controlnet_conditioning_scale=controlNetStrength,
+        generator=generator,
         callback=step,
     ).images[0] if controlNetImage != None else pipe(
         prompt, width=width, height=height,
         num_inference_steps=numSteps, guidance_scale=cfgScale,
+        generator=generator,
         callback=step,
     ).images[0]
 

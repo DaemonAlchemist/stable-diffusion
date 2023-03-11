@@ -1,6 +1,7 @@
 import { useSharedState } from "unstateless";
 
 export const useStandardParams = () => {
+    const [seed, setSeed] = useSharedState("seed", 0)();
     const [width, setWidth] = useSharedState("width", 512)();
     const [height, setHeight] = useSharedState("height", 512)();
     const [cfgScale, setCfgScale] = useSharedState("cfgScale", 7.5)();
@@ -11,6 +12,7 @@ export const useStandardParams = () => {
     const [controlNetStrength, setControlNetStrength] = useSharedState("controlNetStrength", 1.0)();
 
     const values = {
+        seed,
         width,
         height,
         cfgScale,
@@ -23,6 +25,7 @@ export const useStandardParams = () => {
 
     return {
         ...values,
+        setSeed,
         setWidth,
         setHeight,
         setCfgScale,

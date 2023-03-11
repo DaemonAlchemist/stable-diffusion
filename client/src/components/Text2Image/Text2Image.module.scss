@@ -1,6 +1,18 @@
 @import "../../styles/globals.scss";
 
 .txt2Img {
+    .createButtons {
+        text-align: right;
+        button:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: solid 1px #ffffff;
+        }
+        button:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
     .imgCell {
         width: 1024px;
         height: 1024px;
@@ -10,13 +22,19 @@
             float: right;
         }
     }
-    .imgContainer {
-        border: solid 1px;
-        padding: $paddingDefault;
-        position: relative;
-        overflow: hidden;
-        img {
-            width: 100%;
+    .content {
+        text-align: center;
+        vertical-align: middle;
+        .imgContainer {
+            display: inline-block;
+            width: auto;
+            border: solid 1px;
+            padding: $paddingDefault;
+            position: relative;
+            overflow: hidden;
+            img {
+                width: 100%;
+            }
         }
     }
 }

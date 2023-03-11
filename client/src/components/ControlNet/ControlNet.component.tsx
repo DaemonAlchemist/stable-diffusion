@@ -1,13 +1,17 @@
 import { apiBase } from '@/lib/config';
 import { useStandardParams } from '@/lib/useStandardParams';
 import { CloseOutlined, InboxOutlined } from '@ant-design/icons';
-import { Button, Select, Upload } from 'antd';
+import { Button, Select, Upload, Slider } from 'antd';
 import { Index } from 'ts-functional/dist/types';
 import { ControlNetProps, IUploadChange } from "./ControlNet.d";
 import styles from './ControlNet.module.scss';
 
 export const ControlNetComponent = (props:ControlNetProps) => {
-    const {controlNetImage, setControlNetImage, preprocessor, setPreprocessor} = useStandardParams();
+    const {
+        controlNetImage, setControlNetImage,
+        preprocessor, setPreprocessor,
+        controlNetStrength, setControlNetStrength,
+    } = useStandardParams();
     const clear = () => {
         setControlNetImage("");
         setPreprocessor("");
@@ -34,7 +38,7 @@ export const ControlNetComponent = (props:ControlNetProps) => {
         <p>
             <span>Hint Image</span>
             {!!controlNetImage && <>
-                <Select placeholder="Select a hint type" value={preprocessor || undefined} onChange={setPreprocessor}>
+                <Select placeholder="Select a hint type" value={preprocessor || undefined} onChange={setPreprocessor} style={{width: "150px"}}>
                     {Object.keys(preprocessors).map(p => <Select.Option key={p} value={p}>
                         {preprocessors[p]}
                     </Select.Option>)}
@@ -42,6 +46,7 @@ export const ControlNetComponent = (props:ControlNetProps) => {
                 <Button className={styles.removeBtn} type="ghost" onClick={clear}>
                     Remove <CloseOutlined />
                 </Button>
+                <Slider value={controlNetStrength} min={0} max={2} step={0.05} onChange={setControlNetStrength} marks={{0: "ignore", 1: "use", 2: "more"}}/>
                 <img src={`${apiBase}${controlNetImage}`} />
             </>}
             {!controlNetImage && <em>None Selected</em>}
