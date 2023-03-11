@@ -27,12 +27,13 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
     const [lastImage, setLastImage] = useLastImage();
     const [prompt, setPrompt] = useInput();
     const [negativePrompt, setNegativePrompt] = useInput();
+    const [numImages, setNumImages] = useInput("1");
     const params = useStandardParams();
 
     const onCreate = () => {
         const seed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
         params.setSeed(seed);
-        api.get("txt2img", {prompt, negativePrompt, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {prompt, negativePrompt, numImages, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     const onRedo = () => {
@@ -47,16 +48,17 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
         <Row gutter={24}>
             <Col xs={6}>
                 <Row>
-                    <Col xs={16}>
+                    <Col xs={24}>
                         <StatusBar />
                     </Col>
-                    <Col xs={8} className={styles.createButtons}>
+                    <Col xs={24} className={styles.createButtons}>
                     <Button type="primary" onClick={onCreate} title="Create with a new seed">
                             <PlayCircleOutlined />
                     </Button>
                     <Button type="primary" onClick={onRedo} title="Reuse the last seed">
                         <ReloadOutlined />
                     </Button>
+                    <Input type="number" style={{width: 75}} value={+numImages} onChange={setNumImages}/>
                     </Col>
                 </Row>
                 <p>Prompt</p>

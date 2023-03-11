@@ -23,7 +23,7 @@ router = APIRouter()
 status = Status()
 
 # define a function to update the iteration status
-def step(step, timestep, latents):
+def step(step:int, timestep:int, latents:torch.FloatTensor):
     status.updateIter(step)
 
 def getControlNetPipeline(preprocessor:str, model:str):
@@ -147,8 +147,8 @@ def segments(baseImage:np.ndarray):
 
 @router.get("/txt2img")
 def txt2imgHandler(
-    prompt:str, negativePrompt:str, seed:int,
-    width:int, height:int,
+    prompt:str="", negativePrompt:str="", seed:int=0, numImages:int=1,
+    width:int=512, height:int=512,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
 ):
@@ -172,27 +172,33 @@ def txt2imgHandler(
 
     pipe = pipe.to("cuda")
 
-    # Generate the image
-    generator = torch.Generator("cuda").manual_seed(seed)
-    status.updateStatus("Generating")
-    image = pipe(
-        prompt, negative_prompt=negativePrompt, width=width, height=height,
-        num_inference_steps=numSteps, guidance_scale=cfgScale,
-        image=getControlNetImage(controlNetImage, preprocessor),
-        controlnet_conditioning_scale=controlNetStrength,
-        generator=generator,
-        callback=step,
-    ).images[0] if controlNetImage != None else pipe(
-        prompt, negative_prompt=negativePrompt, width=width, height=height,
-        num_inference_steps=numSteps, guidance_scale=cfgScale,
-        generator=generator,
-        callback=step,
-    ).images[0]
+    # TODO: Save all images
 
-    # Save the final image
-    status.updateStatus("Saving image")
-    fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
-    image.save(fileName)
+    # Generate the image
+    for x in range(numImages):
+        status.updateIter(0)
+        status.updateStatus("Generating")
+        generator = torch.Generator("cuda").manual_seed(seed)
+        seed+=1
+        image = pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            image=getControlNetImage(controlNetImage, preprocessor),
+            controlnet_conditioning_scale=controlNetStrength,
+            generator=generator,
+            callback=step,
+        ).images[0] if controlNetImage != None else pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            generator=generator,
+            callback=step,
+        ).images[0]
+
+        # Save the final image
+        status.updateStatus("Saving image")
+        fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
+        status.updateLastImage(fileName)
+        image.save(fileName)
 
     # Update the status
     status.done()
