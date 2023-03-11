@@ -6,6 +6,7 @@ import { useStandardParams } from '@/lib/useStandardParams';
 import { PlayCircleOutlined, SettingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Button, Col, Collapse, Input, Row, Select } from 'antd';
 import { randomInt } from 'crypto';
+import { ChangeEvent } from 'react';
 import { pipe, prop } from 'ts-functional';
 import { ControlNet } from '../ControlNet';
 import { StandardParameters } from '../StandardParameters';
@@ -38,6 +39,10 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
         api.get("txt2img", {prompt, ...params.values()}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
+    const onChangeSeed = (e:ChangeEvent<HTMLInputElement>) => {
+        params.setSeed(e.currentTarget.value);
+    }
+
     return <div className={styles.txt2Img}>
         <Row gutter={24}>
             <Col xs={6}>
@@ -62,10 +67,14 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                 <ControlNet />
                 <Collapse>
                     <Collapse.Panel key="advanced" header={<><SettingOutlined /> Advanced Options</>}>
-                        Sampler&nbsp;
-                        <Select style={{width: "128px"}} value={params.sampler} onChange={params.setSampler}>
-                            {schedulers.map(s => <Select.Option key={s} value={s}>{s}</Select.Option>)}
-                        </Select>
+                        <p>
+                            Sampler&nbsp;
+                            <Select style={{width: "128px"}} value={params.sampler} onChange={params.setSampler}>
+                                {schedulers.map(s => <Select.Option key={s} value={s}>{s}</Select.Option>)}
+                            </Select>
+                        </p>
+
+                        <p><Input addonBefore="Set Manual Seed" value={params.seed} onChange={onChangeSeed} /></p>
                     </Collapse.Panel>
                 </Collapse>
             </Col>
