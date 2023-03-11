@@ -147,7 +147,7 @@ def segments(baseImage:np.ndarray):
 
 @router.get("/txt2img")
 def txt2imgHandler(
-    prompt:str, seed:int,
+    prompt:str, negativePrompt:str, seed:int,
     width:int, height:int,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
@@ -176,14 +176,14 @@ def txt2imgHandler(
     generator = torch.Generator("cuda").manual_seed(seed)
     status.updateStatus("Generating")
     image = pipe(
-        prompt, width=width, height=height,
+        prompt, negative_prompt=negativePrompt, width=width, height=height,
         num_inference_steps=numSteps, guidance_scale=cfgScale,
         image=getControlNetImage(controlNetImage, preprocessor),
         controlnet_conditioning_scale=controlNetStrength,
         generator=generator,
         callback=step,
     ).images[0] if controlNetImage != None else pipe(
-        prompt, width=width, height=height,
+        prompt, negative_prompt=negativePrompt, width=width, height=height,
         num_inference_steps=numSteps, guidance_scale=cfgScale,
         generator=generator,
         callback=step,

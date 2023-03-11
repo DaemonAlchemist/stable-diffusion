@@ -25,12 +25,13 @@ const getRandomInt = (min:number, max:number) => {
 export const Text2ImageComponent = (props:Text2ImageProps) => {
     const [lastImage, setLastImage] = useLastImage();
     const [prompt, setPrompt] = useInput();
+    const [negativePrompt, setNegativePrompt] = useInput();
     const params = useStandardParams();
 
     const onCreate = () => {
         const seed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
         params.setSeed(seed);
-        api.get("txt2img", {prompt, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {prompt, negativePrompt, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     const onRedo = () => {
@@ -55,6 +56,8 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                 </Row>
                 <p>Prompt</p>
                 <Input.TextArea value={prompt} onChange={setPrompt}/>
+                <p>Negative Prompt</p>
+                <Input.TextArea value={negativePrompt} onChange={setNegativePrompt}/>
                 <StandardParameters />
                 <ControlNet />
                 <Collapse>
