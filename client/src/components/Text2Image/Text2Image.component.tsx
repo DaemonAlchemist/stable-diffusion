@@ -3,9 +3,8 @@ import { apiBase } from '@/lib/config';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { PlayCircleOutlined, SettingOutlined, ReloadOutlined } from '@ant-design/icons';
+import { BulbOutlined, EditOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Col, Collapse, Input, Row, Select } from 'antd';
-import { randomInt } from 'crypto';
 import { ChangeEvent } from 'react';
 import { pipe, prop } from 'ts-functional';
 import { ControlNet } from '../ControlNet';
@@ -52,22 +51,29 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                         <StatusBar />
                     </Col>
                     <Col xs={24} className={styles.createButtons}>
-                    <Input addonBefore="Create image(s)" type="number" style={{width: 200}} value={+numImages} onChange={setNumImages}/>
-                    <Button type="primary" onClick={onCreate} title="Create with a new seed">
-                            <PlayCircleOutlined />
-                    </Button>
-                    <Button type="primary" onClick={onRedo} title="Reuse the last seed">
-                        <ReloadOutlined />
-                    </Button>
+                        <Input addonBefore="Create image(s)" type="number" style={{width: 200}} value={+numImages} onChange={setNumImages}/>
+                        <Button type="primary" onClick={onRedo} title="Reuse the last seed">
+                            <ReloadOutlined />
+                        </Button>
+                        <Button type="primary" onClick={onCreate} title="Create with a new seed">
+                            <SendOutlined />
+                        </Button>
                     </Col>
                 </Row>
-                <p>Prompt</p>
-                <Input.TextArea value={prompt} onChange={setPrompt}/>
-                <p>Negative Prompt</p>
-                <Input.TextArea value={negativePrompt} onChange={setNegativePrompt}/>
-                <StandardParameters />
-                <ControlNet />
-                <Collapse>
+                <Collapse defaultActiveKey={["prompt", "params"]}>
+                    <Collapse.Panel key="prompt" header={<><EditOutlined /> Prompts</>}>
+                        <div>Prompt</div>
+                        <Input.TextArea value={prompt} onChange={setPrompt}/>
+                        <br/><br/>
+                        <div>Negative Prompt</div>
+                        <Input.TextArea value={negativePrompt} onChange={setNegativePrompt}/>
+                    </Collapse.Panel>
+                    <Collapse.Panel key="params" header={<><SettingOutlined/> Standard Options</>}>
+                        <StandardParameters />
+                    </Collapse.Panel>
+                    <Collapse.Panel key="controlnet" header={<><BulbOutlined /> Hint Image</>}>
+                        <ControlNet />
+                    </Collapse.Panel>
                     <Collapse.Panel key="advanced" header={<><SettingOutlined /> Advanced Options</>}>
                         <p>
                             Sampler&nbsp;

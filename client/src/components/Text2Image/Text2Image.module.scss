@@ -3,6 +3,7 @@
 .txt2Img {
     .createButtons {
         text-align: right;
+        margin-bottom: $paddingDefault;
         button:nth-child(2) {
             border-radius: 0;
             border-right: solid 1px #ffffff;
