@@ -12,4 +12,12 @@ export const api = {
             .reduce((a, k) => ({ ...a, [k]: query[k] }), {})
         )
         .then((response:any) => response.body as T),
+    delete: (url:string):Promise<string> =>
+        request.delete(`${apiBase}/${url}`),
+    exists: (url:string):Promise<boolean> => {
+        const file = ["\\", "/"].includes(url[0]) ? url.substring(1) : url
+        return request.get(`${apiBase}/${file}`)
+            .then(() => true)
+            .catch(() => false);
+    },
 }

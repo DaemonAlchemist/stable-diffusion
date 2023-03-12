@@ -1,10 +1,10 @@
 from fastapi import APIRouter, UploadFile
 from src.lib.status import Status
-from os import listdir, getcwd, path
+from os import listdir, getcwd, path, remove
 import aiofiles
 
 outputFilePath = "static\\outputs"
-uploadFilePath = "static\\uploads"
+uploadFilePath = outputFilePath
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ def getHandler():
     files.reverse()
     return files
 
-@router.post("/uploads")
+@router.post("/files")
 async def uploadHandler(file:UploadFile):
     filePath = "\\" + uploadFilePath + "\\" + file.filename
     outPath = getcwd() + filePath
@@ -27,3 +27,8 @@ async def uploadHandler(file:UploadFile):
         content = await file.read()  # async read
         await out_file.write(content)  # async write
     return {"file": filePath}
+
+@router.delete("/files/{fileName}")
+async def deleteHandler(fileName:str):
+    remove(getcwd() + "\\" + outputFilePath + "\\" + fileName)
+    return "File deleted"

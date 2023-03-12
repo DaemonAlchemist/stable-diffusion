@@ -1,7 +1,8 @@
+import { api } from '@/lib/api';
 import { apiBase } from '@/lib/config';
 import { CloseOutlined, InboxOutlined } from '@ant-design/icons';
 import { Button, Upload } from 'antd';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {ImageUploaderProps, IUploadChange} from "./ImageUploader.d";
 import styles from './ImageUploader.module.scss';
 
@@ -16,6 +17,22 @@ export const ImageUploaderComponent = ({title, text, file, setFile, onClear, chi
         if(onClear) {onClear();}
     }
 
+    const checkFile = () => {
+        console.log(file);
+        if(file) {
+            console.log(`Checking file ${file}`);
+            api.exists(file).then(exists => {
+                console.log(exists ? "Exists" : "Doesn't exist");
+                if(!exists) {clear();}
+            });
+        }
+    }
+
+    useEffect(() => {
+        const timer = window.setInterval(checkFile, 2000);
+
+        return () => window.clearInterval(timer);
+    }, [file]);
 
     return <div className={styles.imageUploader}>
         <p>
@@ -32,7 +49,7 @@ export const ImageUploaderComponent = ({title, text, file, setFile, onClear, chi
         {!file && <Upload.Dragger
             height={256}
             accept=".png,.jpg,.jpeg,.gif"
-            action={`${apiBase}/uploads`}
+            action={`${apiBase}/files`}
             onChange={onChange}
             showUploadList={false}
             multiple={false}
