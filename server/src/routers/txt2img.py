@@ -1,8 +1,9 @@
+import os
 from logging import warning
 from random import randint
 
 import torch
-from diffusers import StableDiffusionPipeline, ControlNetModel, StableDiffusionControlNetPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline
 from diffusers.schedulers import (DDIMScheduler, DDPMScheduler,
                                   DPMSolverMultistepScheduler,
                                   EulerAncestralDiscreteScheduler,
@@ -10,14 +11,9 @@ from diffusers.schedulers import (DDIMScheduler, DDPMScheduler,
                                   PNDMScheduler)
 from fastapi import APIRouter
 from src.lib.status import Status
+from src.lib.control_net import getControlNetImage, getControlNetPipeline
 from src.routers.files import outputFilePath
-import os
 from diffusers.utils import load_image
-import numpy as np
-import cv2
-from PIL import Image
-from controlnet_aux import OpenposeDetector, HEDdetector, MLSDdetector
-from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 
 router = APIRouter()
 status = Status()
@@ -26,138 +22,24 @@ status = Status()
 def step(step:int, timestep:int, latents:torch.FloatTensor):
     status.updateIter(step)
 
-def getControlNetPipeline(preprocessor:str, model:str):
-    controlNetModel =\
-        "lllyasviel/sd-controlnet-canny"    if preprocessor == "canny"    else\
-        "lllyasviel/sd-controlnet-depth"    if preprocessor == "depth"    else\
-        "lllyasviel/sd-controlnet-hed"      if preprocessor == "hed"      else\
-        "lllyasviel/sd-controlnet-mlsd"     if preprocessor == "mlsd"     else\
-        "lllyasviel/sd-controlnet-normal"   if preprocessor == "normal"   else\
-        "lllyasviel/sd-controlnet-openpose" if preprocessor == "openpose" else\
-        "lllyasviel/sd-controlnet-scribble" if preprocessor == "scribble" else\
-        "lllyasviel/sd-controlnet-seg"      if preprocessor == "segments" else\
-        "lllyasviel/sd-controlnet-canny"
-    
-    controlnet = ControlNetModel.from_pretrained(controlNetModel, torch_dtype=torch.float16)
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-        model, controlnet=controlnet, torch_dtype=torch.float16, safety_checker=None
-    )
-
-    pipe.enable_model_cpu_offload()
-
-    return pipe
-
-def getControlNetImage(controlNetImage:str, preprocessor:str):
-    image = load_image(os.getcwd() + "\\" + controlNetImage)
-
-    hintImage =\
-        canny(image)    if preprocessor == "canny"    else\
-        depth(image)    if preprocessor == "depth"    else\
-        hed(image)      if preprocessor == "hed"      else\
-        mlsd(image)     if preprocessor == "mlsd"     else\
-        normal(image)   if preprocessor == "normal"   else\
-        pose(image)     if preprocessor == "openpose" else\
-        scribble(image) if preprocessor == "scribble" else\
-        segments(image) if preprocessor == "segments" else\
-        canny(image)
-    return hintImage
-
-def canny(baseImage:np.ndarray):
-    image = np.array(baseImage)
-    low_threshold = 100
-    high_threshold = 200
-
-    image = cv2.Canny(image, low_threshold, high_threshold)
-    image = image[:, :, None]
-    image = np.concatenate([image, image, image], axis=2)
-    return Image.fromarray(image)
-
-def depth(baseImage:np.ndarray):
-    depth_estimator = pipeline('depth-estimation')
-    image = depth_estimator(baseImage)['depth']
-    image = np.array(image)
-    image = image[:, :, None]
-    image = np.concatenate([image, image, image], axis=2)
-    return Image.fromarray(image)
-
-def pose(baseImage:np.ndarray):
-    model = OpenposeDetector.from_pretrained("lllyasviel/ControlNet")
-    return model(baseImage)
-
-def hed(baseImage:np.ndarray):
-    hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
-    return hed(baseImage)
-
-def normal(baseImage:np.ndarray):
-    depth_estimator = pipeline("depth-estimation", model ="Intel/dpt-hybrid-midas" )
-    image = depth_estimator(baseImage)['predicted_depth'][0]
-
-    image = image.numpy()
-
-    image_depth = image.copy()
-    image_depth -= np.min(image_depth)
-    image_depth /= np.max(image_depth)
-
-    bg_threhold = 0.4
-
-    x = cv2.Sobel(image, cv2.CV_32F, 1, 0, ksize=3)
-    x[image_depth < bg_threhold] = 0
-
-    y = cv2.Sobel(image, cv2.CV_32F, 0, 1, ksize=3)
-    y[image_depth < bg_threhold] = 0
-
-    z = np.ones_like(x) * np.pi * 2.0
-
-    image = np.stack([x, y, z], axis=2)
-    image /= np.sum(image ** 2.0, axis=2, keepdims=True) ** 0.5
-    image = (image * 127.5 + 127.5).clip(0, 255).astype(np.uint8)
-    return Image.fromarray(image)
-
-def mlsd(baseImage:np.ndarray):
-    mlsd = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
-    return mlsd(baseImage)
-
-# TODO - Implement these
-
-def scribble(baseImage:np.ndarray):
-    hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
-    return hed(baseImage, scribble=true)
-
-def segments(baseImage:np.ndarray):
-    image_processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-convnext-small")
-    image_segmentor = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-convnext-small")
-    pixel_values = image_processor(baseImage, return_tensors="pt").pixel_values
-
-    with torch.no_grad():
-        outputs = image_segmentor(pixel_values)
-
-    seg = image_processor.post_process_semantic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
-
-    color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
-
-    # TODO Where does the ade_palette function come from?
-    palette = np.array(ade_palette())
-
-    for label, color in enumerate(palette):
-        color_seg[seg == label, :] = color
-
-    color_seg = color_seg.astype(np.uint8)
-
-    return Image.fromarray(color_seg)
-
 @router.get("/txt2img")
 def txt2imgHandler(
     prompt:str="", negativePrompt:str="", seed:int=0, numImages:int=1,
+    sourceImage:str = None, sourceImageStrength:float=0.5, maskImage:str = None,
     width:int=512, height:int=512,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
 ):
+    sourceImage = load_image(os.getcwd() + "\\" + sourceImage) if sourceImage else None
+    maskImage   = load_image(os.getcwd() + "\\" + maskImage  ) if maskImage   else None
 
     # Startup the pipeline
     status.start(numSteps)
     model = "runwayml/stable-diffusion-v1-5"
-    pipe = StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None\
-        else getControlNetPipeline(preprocessor, model)
+    pipe =          StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage == None\
+        else StableDiffusionImg2ImgPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage != None & maskImage == None\
+        else StableDiffusionInpaintPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage != None & maskImage != None\
+        else getControlNetPipeline(preprocessor, model, sourceImage, maskImage)
     
     # Instantiate the scheduler
     scheduler = {
@@ -172,7 +54,6 @@ def txt2imgHandler(
 
     pipe = pipe.to("cuda")
 
-    # TODO: Save all images
 
     # Generate the image
     for x in range(numImages):
@@ -186,10 +67,55 @@ def txt2imgHandler(
             image=getControlNetImage(controlNetImage, preprocessor),
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
+            scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None else pipe(
+        ).images[0] if controlNetImage != None & sourceImage == None else\
+        pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
+            controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
+            image=sourceImage,
+            strength=sourceImageStrength,
+            controlnet_conditioning_scale=controlNetStrength,
+            generator=generator,
+            scheduler=scheduler,
+            callback=step,
+        ).images[0] if controlNetImage != None & sourceImage != None & maskImage == None else\
+        pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
+            image=sourceImage,
+            mask_image=maskImage,
+            strength=sourceImageStrength,
+            controlnet_conditioning_scale=controlNetStrength,
+            generator=generator,
+            scheduler=scheduler,
+            callback=step,
+        ).images[0] if controlNetImage != None & sourceImage != None & maskImage != None else\
+        pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            scheduler=scheduler,
+            generator=generator,
+            callback=step,
+        ).images[0] if sourceImage == None else\
+        pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            image=sourceImage,
+            strength=sourceImageStrength,
+            scheduler=scheduler,
+            generator=generator,
+            callback=step,
+        ).images[0] if maskImage == None else\
+        pipe(
+            prompt, negative_prompt=negativePrompt, width=width, height=height,
+            num_inference_steps=numSteps, guidance_scale=cfgScale,
+            image=sourceImage,
+            mask_image=maskImage,
+            strength=sourceImageStrength,
+            scheduler=scheduler,
             generator=generator,
             callback=step,
         ).images[0]

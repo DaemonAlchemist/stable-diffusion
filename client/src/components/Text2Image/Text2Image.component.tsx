@@ -3,11 +3,12 @@ import { apiBase } from '@/lib/config';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, EditOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Col, Collapse, Input, Row, Select } from 'antd';
+import { BulbOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Col, Collapse, Input, Row, Select, Slider } from 'antd';
 import { ChangeEvent } from 'react';
 import { pipe, prop } from 'ts-functional';
 import { ControlNet } from '../ControlNet';
+import { ImageUploader } from '../ImageUploader';
 import { StandardParameters } from '../StandardParameters';
 import { StatusBar } from '../StatusBar';
 import { Text2ImageProps } from "./Text2Image.d";
@@ -71,10 +72,30 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                     <Collapse.Panel key="params" header={<><SettingOutlined/> Standard Options</>}>
                         <StandardParameters />
                     </Collapse.Panel>
+                    <Collapse.Panel key="image" header={<><PictureOutlined /> Source Image</>}>
+                        <ImageUploader
+                            title='Source Image'
+                            text="Click or drag an image here to start generating from."
+                            file={params.sourceImage}
+                            setFile={params.setSourceImage}
+                        >
+                            <br/>
+                            Variation
+                            <Slider value={params.sourceImageStrength} min={0} max={1} step={0.01} onChange={params.setSourceImageStrength} marks={{0: "less", 1: "more"}} />
+                        </ImageUploader>
+                    </Collapse.Panel>
+                    {!!params.sourceImage && <Collapse.Panel key="mask" header={<><ExpandOutlined /> Mask Image</>}>
+                        <ImageUploader
+                            title='Mask Image'
+                            text={<>Click or drag an image here to<br/>mask areas in the source image.</>}
+                            file={params.maskImage}
+                            setFile={params.setMaskImage}
+                        />
+                    </Collapse.Panel>}
                     <Collapse.Panel key="controlnet" header={<><BulbOutlined /> Hint Image</>}>
                         <ControlNet />
                     </Collapse.Panel>
-                    <Collapse.Panel key="advanced" header={<><SettingOutlined /> Advanced Options</>}>
+                    <Collapse.Panel key="advanced" header={<><ControlOutlined /> Advanced Options</>}>
                         <p>
                             Sampler&nbsp;
                             <Select style={{width: "128px"}} value={params.sampler} onChange={params.setSampler}>
