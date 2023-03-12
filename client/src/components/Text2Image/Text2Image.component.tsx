@@ -2,8 +2,9 @@ import { api } from '@/lib/api';
 import { apiBase } from '@/lib/config';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
+import { useLoader } from '@/lib/useLoader';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { BulbOutlined, ControlOutlined, EditOutlined, ExpandOutlined, FullscreenOutlined, LoadingOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Col, Collapse, Input, Row, Select, Slider } from 'antd';
 import { ChangeEvent } from 'react';
 import { pipe, prop } from 'ts-functional';
@@ -42,6 +43,15 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
 
     const onChangeSeed = (e:ChangeEvent<HTMLInputElement>) => {
         params.setSeed(e.currentTarget.value);
+    }
+
+    const upscaling = useLoader();
+    const upscale = () => {
+        const prompt = lastImage.replace("static\\outputs\\", "").split("-")[0];
+        upscaling.start();
+        api.get("upscale", {image: lastImage, prompt})
+            .then(pipe(prop<any, any>("img"), setLastImage))
+            .finally(upscaling.done);
     }
 
     return <div className={styles.txt2Img}>
@@ -108,9 +118,15 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                 </Collapse>
             </Col>
             <Col xs={18} className={styles.content}>
-                <div className={styles.imgContainer}>
-                    {!!lastImage && <img src={`${apiBase}/${lastImage}`} />}
-                </div>
+                {!!lastImage && <>
+                    <Button onClick={upscale} title="Upscale">
+                        {upscaling.isLoading ? <LoadingOutlined spin/> : <FullscreenOutlined />}
+                    </Button>
+                    <br/><br/>
+                    <div className={styles.imgContainer}>
+                        <img src={`${apiBase}/${lastImage}`} />
+                    </div>
+                </>}
             </Col>
         </Row>
         

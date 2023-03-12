@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from routers import status, txt2img, files
+from routers import status, txt2img, files, upscale
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(status.router)
 app.include_router(txt2img.router)
 app.include_router(files.router)
+app.include_router(upscale.router)
 
 app.add_middleware(
     CORSMiddleware,

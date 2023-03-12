@@ -2,18 +2,19 @@
 
 A webapp for Stable Diffusion
 
-This is a project I started for two reason:
-
-- The existing Stable Diffusion GUI projects did not (at the time) have the features I wanted.
-- I wanted to learn how Stable Diffusion worked under the hood in more depth.
-
 ![Stable Diffusion GUI Screenshot](/doc/screen-shot.png)
+
+I created this project for two reason:
+
+- The existing Stable Diffusion GUI projects did not (at the time I started this) have the features I wanted.
+- I wanted to learn how Stable Diffusion worked under the hood in more depth.
 
 ## Features
 - Text 2 Image
 - Image 2 Image
 - Inpainting / Outpainting
 - ControlNet support for all three of these workflows
+- Upscaling
 - Batch processing
 - Unified interface
   - All workflows integrated into one page.  Source image (for img2img and inpainting), mask image (for inpainting), and hint image (for control net) are all optional.  The correct pipeline will be chosen automatically based on what's selected.
@@ -24,9 +25,9 @@ This is a project I started for two reason:
 
 ## Planned features
 - Face restoration
-- Upscaling
 - Fine-tuning (Textual inversion, Dreambooth, LoRA, etc.)
 - End-to-end movie processing
+- Unified canvas
 
 ## Prerequisites
 
