@@ -1,25 +1,2 @@
 @import "../../styles/globals.scss";
 
-.controlNet {
-    margin-bottom: $paddingDefault;
-    position: relative;
-    & > p > span {
-        display: inline-block;
-        margin-right: $paddingDefault;
-    }
-    img {
-        width: 100%;
-        border: solid 1px;
-        padding: $paddingSmall;
-        border-radius: $borderRadiusDefault;
-        margin-top: $paddingSmall;
-    }
-    .removeBtn {
-        position: absolute;
-        right: -16px;
-        top: 0;
-    }
-    em {
-        float: right;
-    }
-}
