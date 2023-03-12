@@ -7,6 +7,8 @@ This is a project I started for two reason:
 - The existing Stable Diffusion GUI projects did not (at the time) have the features I wanted.
 - I wanted to learn how Stable Diffusion worked under the hood in more depth.
 
+![Stable Diffusion GUI Screenshot](/doc/screen-shot.png)
+
 ## Features
 - Text 2 Image
 - Image 2 Image
