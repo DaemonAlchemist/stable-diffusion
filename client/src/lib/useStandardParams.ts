@@ -18,40 +18,20 @@ export const useStandardParams = () => {
     const [controlNetStrength, setControlNetStrength]   = useSharedState("controlNetStrength",  1.0     )();
 
     const values = {
-        prompt,
-        negativePrompt,
-        seed,
-        width,
-        height,
-        sizeSource,
-        sourceImage,
-        maskImage,
-        sourceImageStrength,
-        cfgScale,
-        numSteps,
-        sampler,
-        controlNetImage,
-        preprocessor,
-        controlNetStrength
+        prompt, negativePrompt, seed,
+        width, height, sizeSource,
+        sourceImage, maskImage, sourceImageStrength,
+        cfgScale, numSteps, sampler,
+        controlNetImage, preprocessor, controlNetStrength
     };
 
     return {
         ...values,
-        setPrompt,
-        setNegativePrompt,
-        setSeed,
-        setWidth,
-        setHeight,
-        setSizeSource,
-        setSourceImage,
-        setMaskImage,
-        setSourceImageStrength,
-        setCfgScale,
-        setNumSteps,
-        setSampler,
-        setControlNetImage,
-        setPreprocessor,
-        setControlNetStrength,
+        setPrompt, setNegativePrompt, setSeed,
+        setWidth, setHeight, setSizeSource,
+        setSourceImage, setMaskImage, setSourceImageStrength,
+        setCfgScale, setNumSteps, setSampler,
+        setControlNetImage, setPreprocessor, setControlNetStrength,
         values: () => values,
     };
 }

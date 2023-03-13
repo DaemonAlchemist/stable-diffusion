@@ -14,6 +14,7 @@ from src.lib.status import Status
 from src.lib.control_net import getControlNetImage, getControlNetPipeline
 from src.routers.files import outputFilePath
 from diffusers.utils import load_image
+import PIL
 
 router = APIRouter()
 status = Status()
@@ -26,20 +27,28 @@ def step(step:int, timestep:int, latents:torch.FloatTensor):
 def txt2imgHandler(
     prompt:str="", negativePrompt:str="", seed:int=0, numImages:int=1,
     sourceImage:str = None, sourceImageStrength:float=0.5, maskImage:str = None,
-    width:int=512, height:int=512,
+    width:int=512, height:int=512, sizeSource:str = "manual",
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
 ):
-    sourceImage = load_image(os.getcwd() + "\\" + sourceImage) if sourceImage else None
-    maskImage   = load_image(os.getcwd() + "\\" + maskImage  ) if maskImage   else None
+    source = load_image(os.getcwd() + "\\" + sourceImage) if sourceImage else None
+    mask   = load_image(os.getcwd() + "\\" + maskImage  ) if maskImage   else None
+    hint   = load_image(os.getcwd() + "\\" + controlNetImage)
+
+    if sizeSource == "source" :
+        width = source.width
+        height = source.height
+    if sizeSource == "hint":
+        width = hint.width
+        height = hint.height
 
     # Startup the pipeline
     status.start(numSteps)
     model = "runwayml/stable-diffusion-v1-5"
-    pipe =          StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage == None\
-        else StableDiffusionImg2ImgPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage != None & maskImage == None\
-        else StableDiffusionInpaintPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & sourceImage != None & maskImage != None\
-        else getControlNetPipeline(preprocessor, model, sourceImage, maskImage)
+    pipe =          StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source == None\
+        else StableDiffusionImg2ImgPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source != None & mask == None\
+        else StableDiffusionInpaintPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source != None & mask != None\
+        else getControlNetPipeline(preprocessor, model, source, mask)
     
     # Instantiate the scheduler
     scheduler = {
@@ -69,51 +78,51 @@ def txt2imgHandler(
             generator=generator,
             scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & sourceImage == None else\
+        ).images[0] if controlNetImage != None & source == None else\
         pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
-            image=sourceImage,
+            image=source,
             strength=sourceImageStrength,
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
             scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & sourceImage != None & maskImage == None else\
+        ).images[0] if controlNetImage != None & source != None & mask == None else\
         pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
-            image=sourceImage,
-            mask_image=maskImage,
+            image=source,
+            mask_image=mask,
             strength=sourceImageStrength,
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
             scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & sourceImage != None & maskImage != None else\
+        ).images[0] if controlNetImage != None & source != None & mask != None else\
         pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             scheduler=scheduler,
             generator=generator,
             callback=step,
-        ).images[0] if sourceImage == None else\
+        ).images[0] if source == None else\
         pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
-            image=sourceImage,
+            image=source,
             strength=sourceImageStrength,
             scheduler=scheduler,
             generator=generator,
             callback=step,
-        ).images[0] if maskImage == None else\
+        ).images[0] if mask == None else\
         pipe(
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
-            image=sourceImage,
-            mask_image=maskImage,
+            image=source,
+            mask_image=mask,
             strength=sourceImageStrength,
             scheduler=scheduler,
             generator=generator,
