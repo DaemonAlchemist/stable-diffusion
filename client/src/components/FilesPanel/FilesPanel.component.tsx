@@ -23,7 +23,7 @@ export const FilesPanelComponent = (props:FilesPanelProps) => {
     
     return <Card className={styles.files} title="File List">
         <div className={styles.content}>
-            {files.map(file => <div className={clsx([file.substring(1) === lastImage && styles.selected])}>
+            {files.map(file => <div key={file} className={clsx([file.substring(1) === lastImage && styles.selected])}>
                 <img key={file} src={`${apiBase}${file}`} onClick={updateLastImage(file.substring(1))} />
             </div>)}
         </div>
