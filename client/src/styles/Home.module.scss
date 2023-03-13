@@ -3,6 +3,14 @@
 section.app {
     min-height: 100vh;
     margin: -8px !important;
+    header {
+        b {
+            color: #ffffff;
+        }
+    }
+    .modeSwitch {
+        float: right;
+    }
     .content {
         padding: $paddingDefault;
         color: #ffffff;
