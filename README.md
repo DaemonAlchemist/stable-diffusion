@@ -15,6 +15,7 @@ I created this project for two reason:
 - Inpainting / Outpainting
 - ControlNet support for all three of these workflows
 - Upscaling
+- Face Restoration
 - Batch processing
 - Unified interface
   - All workflows integrated into one page.  Source image (for img2img and inpainting), mask image (for inpainting), and hint image (for control net) are all optional.  The correct pipeline will be chosen automatically based on what's selected.
@@ -24,7 +25,6 @@ I created this project for two reason:
   - Completely separate tiers.  The backend can be run independently from the client, allowing you to write your own client if you don't like mine.
 
 ## Planned features
-- Face restoration
 - Fine-tuning (Textual inversion, Dreambooth, LoRA, etc.)
 - End-to-end movie processing
 - Unified canvas
