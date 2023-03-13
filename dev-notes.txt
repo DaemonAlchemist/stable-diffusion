@@ -1,0 +1,24 @@
+TODO
+====
+Clean up txt2img.py code
+    - Separate functions for each pipeline
+    - Separate common code into utility functions
+        - loading images
+        - setting scheduler
+    - Add support for alternate models
+        - Need to determine a way to know if associated models (CN or LoRA) are compatible
+Add coordination code between UI and server
+     - sampler options
+     - controlnet preprocessors
+Add support for fine-tuning
+    - Inference for LoRA, textual inversion, and dreambooth
+    - GUI for training
+Movie support
+    - Split into images (do we need imageMagick for this?)
+    - run conversion on all images
+    - Re-combine into movie (do we need imageMagick for this?)
+One-click installer
+    - Ideally should not require any prerequisites
+UX Stuff
+    - Progress meter when downloading models
+    - Indicator on options collapser when images have been selected

@@ -5,7 +5,7 @@ import { ImageUploader } from '../ImageUploader';
 import { ControlNetProps } from "./ControlNet.d";
 import styles from './ControlNet.module.scss';
 
-const preprocessors:Index<string> = {
+export const preprocessors:Index<string> = {
     "canny": "Hard Edges",
     "depth": "Depth Map",
     "hed": "Soft Edges",

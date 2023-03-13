@@ -1,13 +1,15 @@
 import { api } from '@/lib/api';
 import { getRandomInt } from '@/lib/random';
+import { truncate } from '@/lib/truncate';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Col, Collapse, Input, Row } from 'antd';
+import { BulbOutlined, CheckCircleTwoTone, CheckOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Col, Collapse, Input, Row, Typography } from 'antd';
 import { pipe, prop } from 'ts-functional';
 import { AdvancedOptions } from '../AdvancedOptions';
 import { ControlNet } from '../ControlNet';
+import { preprocessors } from '../ControlNet/ControlNet.component';
 import { CurrentImage } from '../CurrentImage';
 import { MaskImageUploader } from '../MaskImageUploader';
 import { Prompts } from '../Prompts';
@@ -21,16 +23,22 @@ import styles from './Text2Image.module.scss';
 export const Text2ImageComponent = (props:Text2ImageProps) => {
     const [, setLastImage] = useLastImage();
     const [numImages, setNumImages] = useInput("1");
-    const params = useStandardParams();
+    const {
+        prompt, negativePrompt,
+        width, height, cfgScale, numSteps,
+        sourceImage, maskImage, controlNetImage, preprocessor,
+        seed, sampler,
+        setSeed, values
+    } = useStandardParams();
 
     const onCreate = () => {
-        const seed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
-        params.setSeed(seed);
-        api.get("txt2img", {numImages, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
+        const newSeed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
+        setSeed(newSeed);
+        api.get("txt2img", {numImages, ...values(), newSeed}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     const onRedo = () => {
-        api.get("txt2img", {numImages, ...params.values()}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {numImages, ...values()}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     return <div className={styles.txt2Img}>
@@ -51,22 +59,38 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                     </Col>
                 </Row>
                 <Collapse defaultActiveKey={["prompt", "params"]}>
-                    <Collapse.Panel key="prompt" header={<><EditOutlined /> Prompts</>}>
+                    <Collapse.Panel
+                        key="prompt"
+                        header={<><EditOutlined /> Prompts</>}
+                        extra={<>
+                            <Typography.Text title={prompt} type="success">{truncate(prompt, 25)}</Typography.Text>
+                            &nbsp;&nbsp;
+                            <Typography.Text title={negativePrompt} type="danger">{truncate(negativePrompt, 25)}</Typography.Text>
+                        </>}
+                    >
                         <Prompts />
                     </Collapse.Panel>
-                    <Collapse.Panel key="params" header={<><SettingOutlined/> Standard Options</>}>
+                    <Collapse.Panel
+                        key="params"
+                        header={<><SettingOutlined/> Standard Options</>}
+                        extra={<>{width}x{height}&nbsp;&nbsp;{cfgScale}&nbsp;&nbsp;{numSteps} steps</>}
+                    >
                         <StandardParameters />
                     </Collapse.Panel>
-                    <Collapse.Panel key="image" header={<><PictureOutlined /> Source Image</>}>
+                    <Collapse.Panel key="image" header={<><PictureOutlined /> Source Image</>} extra={!!sourceImage && <CheckCircleTwoTone twoToneColor="green" />}>
                         <SourceImageUploader />
                     </Collapse.Panel>
-                    {!!params.sourceImage && <Collapse.Panel key="mask" header={<><ExpandOutlined /> Mask Image</>}>
+                    {!!sourceImage && <Collapse.Panel key="mask" header={<><ExpandOutlined /> Mask Image</>} extra={!!maskImage && <CheckCircleTwoTone twoToneColor="green" />}>
                         <MaskImageUploader />
                     </Collapse.Panel>}
-                    <Collapse.Panel key="controlnet" header={<><BulbOutlined /> Hint Image</>}>
+                    <Collapse.Panel
+                        key="controlnet"
+                        header={<><BulbOutlined /> Hint Image</>}
+                        extra={!!controlNetImage && <>{preprocessors[preprocessor]} <CheckCircleTwoTone twoToneColor="green" /></>}
+                    >
                         <ControlNet />
                     </Collapse.Panel>
-                    <Collapse.Panel key="advanced" header={<><ControlOutlined /> Advanced Options</>}>
+                    <Collapse.Panel key="advanced" header={<><ControlOutlined /> Advanced Options</>} extra={<>{sampler}&nbsp;&nbsp;s:{seed}</>}>
                         <AdvancedOptions />
                     </Collapse.Panel>
                 </Collapse>

@@ -163,7 +163,7 @@ def segments(baseImage:np.ndarray):
     with torch.no_grad():
         outputs = image_segmentor(pixel_values)
 
-    seg = image_processor.post_process_semantic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
+    seg = image_processor.post_process_semantic_segmentation(outputs, target_sizes=[baseImage.size[::-1]])[0]
 
     color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
 

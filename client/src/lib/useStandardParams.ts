@@ -6,7 +6,6 @@ export const useStandardParams = () => {
     const [seed, setSeed]                               = useSharedState("seed",                0       )();
     const [width, setWidth]                             = useSharedState("width",               512     )();
     const [height, setHeight]                           = useSharedState("height",              512     )();
-    const [sizeSource, setSizeSource]                   = useSharedState("sizeSource",          "manual")();
     const [sourceImage, setSourceImage]                 = useSharedState("sourceImage",         ""      )();
     const [maskImage, setMaskImage]                     = useSharedState("maskImage",           ""      )();
     const [sourceImageStrength, setSourceImageStrength] = useSharedState("sourceImageStrength", 0.5     )();
@@ -19,7 +18,7 @@ export const useStandardParams = () => {
 
     const values = {
         prompt, negativePrompt, seed,
-        width, height, sizeSource,
+        width, height,
         sourceImage, maskImage, sourceImageStrength,
         cfgScale, numSteps, sampler,
         controlNetImage, preprocessor, controlNetStrength
@@ -28,7 +27,7 @@ export const useStandardParams = () => {
     return {
         ...values,
         setPrompt, setNegativePrompt, setSeed,
-        setWidth, setHeight, setSizeSource,
+        setWidth, setHeight,
         setSourceImage, setMaskImage, setSourceImageStrength,
         setCfgScale, setNumSteps, setSampler,
         setControlNetImage, setPreprocessor, setControlNetStrength,

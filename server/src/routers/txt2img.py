@@ -27,27 +27,19 @@ def step(step:int, timestep:int, latents:torch.FloatTensor):
 def txt2imgHandler(
     prompt:str="", negativePrompt:str="", seed:int=0, numImages:int=1,
     sourceImage:str = None, sourceImageStrength:float=0.5, maskImage:str = None,
-    width:int=512, height:int=512, sizeSource:str = "manual",
+    width:int=512, height:int=512,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
 ):
     source = load_image(os.getcwd() + "\\" + sourceImage) if sourceImage else None
     mask   = load_image(os.getcwd() + "\\" + maskImage  ) if maskImage   else None
-    hint   = load_image(os.getcwd() + "\\" + controlNetImage)
-
-    if sizeSource == "source" :
-        width = source.width
-        height = source.height
-    if sizeSource == "hint":
-        width = hint.width
-        height = hint.height
 
     # Startup the pipeline
     status.start(numSteps)
     model = "runwayml/stable-diffusion-v1-5"
-    pipe =          StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source == None\
-        else StableDiffusionImg2ImgPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source != None & mask == None\
-        else StableDiffusionInpaintPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if controlNetImage == None & source != None & mask != None\
+    pipe =          StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if (controlNetImage == None) & (source == None)\
+        else StableDiffusionImg2ImgPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if (controlNetImage == None) & (source != None) & (mask == None)\
+        else StableDiffusionInpaintPipeline.from_pretrained(model, torch_dtype=torch.float16, safety_checker=None) if (controlNetImage == None) & (source != None) & (mask != None)\
         else getControlNetPipeline(preprocessor, model, source, mask)
     
     # Instantiate the scheduler
@@ -60,9 +52,9 @@ def txt2imgHandler(
         "LMS": LMSDiscreteScheduler,
         "PNDM": PNDMScheduler,
     }[sampler].from_config(pipe.scheduler.config)
+    pipe.scheduler = scheduler
 
     pipe = pipe.to("cuda")
-
 
     # Generate the image
     for x in range(numImages):
@@ -70,28 +62,28 @@ def txt2imgHandler(
         status.updateStatus("Generating")
         generator = torch.Generator("cuda").manual_seed(seed)
         seed+=1
-        image = pipe(
+        image = pipe( # txt2img with controlnet
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             image=getControlNetImage(controlNetImage, preprocessor),
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & source == None else\
-        pipe(
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
+        ).images[0] if (controlNetImage != None) & (source == None) else\
+        pipe( # img2img with controlnet
+            prompt, negative_prompt=negativePrompt,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
             image=source,
             strength=sourceImageStrength,
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & source != None & mask == None else\
-        pipe(
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
+        ).images[0] if (controlNetImage != None) & (source != None) & (mask == None) else\
+        pipe( # inpainting with controlnet
+            prompt, negative_prompt=negativePrompt,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
             image=source,
@@ -99,32 +91,32 @@ def txt2imgHandler(
             strength=sourceImageStrength,
             controlnet_conditioning_scale=controlNetStrength,
             generator=generator,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             callback=step,
-        ).images[0] if controlNetImage != None & source != None & mask != None else\
-        pipe(
+        ).images[0] if (controlNetImage != None) & (source != None) & (mask != None) else\
+        pipe( # txt2img
             prompt, negative_prompt=negativePrompt, width=width, height=height,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             generator=generator,
             callback=step,
-        ).images[0] if source == None else\
-        pipe(
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
+        ).images[0] if (source == None) else\
+        pipe( # img2img
+            prompt, negative_prompt=negativePrompt,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             image=source,
             strength=sourceImageStrength,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             generator=generator,
             callback=step,
-        ).images[0] if mask == None else\
-        pipe(
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
+        ).images[0] if (mask == None) else\
+        pipe( # inpainting
+            prompt, negative_prompt=negativePrompt,
             num_inference_steps=numSteps, guidance_scale=cfgScale,
             image=source,
             mask_image=mask,
             strength=sourceImageStrength,
-            scheduler=scheduler,
+            # scheduler=scheduler,
             generator=generator,
             callback=step,
         ).images[0]

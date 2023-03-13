@@ -2,15 +2,18 @@ import { api } from '@/lib/api';
 import { apiBase } from '@/lib/config';
 import { useLastImage } from '@/lib/useLastImage';
 import { useLoader } from '@/lib/useLoader';
-import { DeleteOutlined, FullscreenOutlined, SmileOutlined } from '@ant-design/icons';
+import { useStandardParams } from '@/lib/useStandardParams';
+import { BulbOutlined, DeleteOutlined, FullscreenOutlined, PictureOutlined, SmileOutlined } from '@ant-design/icons';
 import { Button, notification, Popconfirm, Spin } from 'antd';
-import React from 'react';
 import { last, pipe, prop } from 'ts-functional';
-import {CurrentImageProps} from "./CurrentImage.d";
+import { CurrentImageProps } from "./CurrentImage.d";
 import styles from './CurrentImage.module.scss';
 
 export const CurrentImageComponent = (props:CurrentImageProps) => {
     const [lastImage, setLastImage] = useLastImage();
+    const {setSourceImage, setControlNetImage} = useStandardParams();
+    const setSource = () => setSourceImage("\\" + lastImage);
+    const setHint = () => setControlNetImage("\\" + lastImage);
 
     const editor = useLoader();
 
@@ -49,6 +52,13 @@ export const CurrentImageComponent = (props:CurrentImageProps) => {
             <div className={styles.imgContainer}>
                 <img src={`${apiBase}/${lastImage}`} />
             </div>
+            <Button onClick={setSource}>
+                <PictureOutlined /> Set as source
+            </Button>
+            &nbsp;
+            <Button onClick={setHint}>
+                <BulbOutlined /> Set as hint
+            </Button>
         </Spin>}
     </div>;
 }
