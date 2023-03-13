@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from realesrgan import RealESRGANer
 import cv2
 from basicsr.archs.rrdbnet_arch import RRDBNet
-from logging import warning
+
 router = APIRouter()
 
 @router.get("/upscale")
