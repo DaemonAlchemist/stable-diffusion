@@ -1,64 +1,36 @@
 import { api } from '@/lib/api';
-import { apiBase } from '@/lib/config';
+import { getRandomInt } from '@/lib/random';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
-import { useLoader } from '@/lib/useLoader';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, ControlOutlined, DeleteOutlined, EditOutlined, ExpandOutlined, FullscreenOutlined, LoadingOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Col, Collapse, Input, notification, Popconfirm, Row, Select, Slider, Spin } from 'antd';
-import { ChangeEvent } from 'react';
-import { last, pipe, prop } from 'ts-functional';
+import { BulbOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Col, Collapse, Input, Row } from 'antd';
+import { pipe, prop } from 'ts-functional';
+import { AdvancedOptions } from '../AdvancedOptions';
 import { ControlNet } from '../ControlNet';
-import { ImageUploader } from '../ImageUploader';
+import { CurrentImage } from '../CurrentImage';
+import { MaskImageUploader } from '../MaskImageUploader';
+import { Prompts } from '../Prompts';
+import { SourceImageUploader } from '../SourceImageUploader';
 import { StandardParameters } from '../StandardParameters';
 import { StatusBar } from '../StatusBar';
 import { Text2ImageProps } from "./Text2Image.d";
 import styles from './Text2Image.module.scss';
 
-// TODO: Get an up-to-date list of schedulers from the server rather than hard-coding
-const schedulers = ["DDIM","DDPM", "DPM", "EulerAncestral", "EulerDiscrete", "LMS", "PNDM"];
-
-const getRandomInt = (min:number, max:number) => {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 export const Text2ImageComponent = (props:Text2ImageProps) => {
-    const [lastImage, setLastImage] = useLastImage();
-    const [prompt, setPrompt] = useInput();
-    const [negativePrompt, setNegativePrompt] = useInput();
+    const [, setLastImage] = useLastImage();
     const [numImages, setNumImages] = useInput("1");
     const params = useStandardParams();
 
     const onCreate = () => {
         const seed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
         params.setSeed(seed);
-        api.get("txt2img", {prompt, negativePrompt, numImages, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {numImages, ...params.values(), seed}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     const onRedo = () => {
-        api.get("txt2img", {prompt, ...params.values()}).then(pipe(prop<any, any>("img"), setLastImage));
-    }
-
-    const onChangeSeed = (e:ChangeEvent<HTMLInputElement>) => {
-        params.setSeed(e.currentTarget.value);
-    }
-
-    const upscaling = useLoader();
-    const upscale = () => {
-        const prompt = lastImage.replace("static\\outputs\\", "").split("-")[0];
-        upscaling.start();
-        api.get("upscale", {image: lastImage, prompt})
-            .then(pipe(prop<any, any>("img"), setLastImage))
-            .finally(upscaling.done);
-    }
-
-    const deleteFile = () => {
-        api.delete(`files/${last(lastImage.split("\\"))}`).then(() => {
-            notification.success({message: "File deleted"});
-            setLastImage("");
-        });
+        api.get("txt2img", {numImages, ...params.values()}).then(pipe(prop<any, any>("img"), setLastImage));
     }
 
     return <div className={styles.txt2Img}>
@@ -80,66 +52,27 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                 </Row>
                 <Collapse defaultActiveKey={["prompt", "params"]}>
                     <Collapse.Panel key="prompt" header={<><EditOutlined /> Prompts</>}>
-                        <div>Prompt</div>
-                        <Input.TextArea value={prompt} onChange={setPrompt}/>
-                        <br/><br/>
-                        <div>Negative Prompt</div>
-                        <Input.TextArea value={negativePrompt} onChange={setNegativePrompt}/>
+                        <Prompts />
                     </Collapse.Panel>
                     <Collapse.Panel key="params" header={<><SettingOutlined/> Standard Options</>}>
                         <StandardParameters />
                     </Collapse.Panel>
                     <Collapse.Panel key="image" header={<><PictureOutlined /> Source Image</>}>
-                        <ImageUploader
-                            title='Source Image'
-                            text="Click or drag an image here to start generating from."
-                            file={params.sourceImage}
-                            setFile={params.setSourceImage}
-                        >
-                            <br/>
-                            Variation
-                            <Slider value={params.sourceImageStrength} min={0} max={1} step={0.01} onChange={params.setSourceImageStrength} marks={{0: "less", 1: "more"}} />
-                        </ImageUploader>
+                        <SourceImageUploader />
                     </Collapse.Panel>
                     {!!params.sourceImage && <Collapse.Panel key="mask" header={<><ExpandOutlined /> Mask Image</>}>
-                        <ImageUploader
-                            title='Mask Image'
-                            text={<>Click or drag an image here to<br/>mask areas in the source image.</>}
-                            file={params.maskImage}
-                            setFile={params.setMaskImage}
-                        />
+                        <MaskImageUploader />
                     </Collapse.Panel>}
                     <Collapse.Panel key="controlnet" header={<><BulbOutlined /> Hint Image</>}>
                         <ControlNet />
                     </Collapse.Panel>
                     <Collapse.Panel key="advanced" header={<><ControlOutlined /> Advanced Options</>}>
-                        <p>
-                            Sampler&nbsp;
-                            <Select style={{width: "128px"}} value={params.sampler} onChange={params.setSampler}>
-                                {schedulers.map(s => <Select.Option key={s} value={s}>{s}</Select.Option>)}
-                            </Select>
-                        </p>
-
-                        <p><Input addonBefore="Set Manual Seed" value={params.seed} onChange={onChangeSeed} /></p>
+                        <AdvancedOptions />
                     </Collapse.Panel>
                 </Collapse>
             </Col>
-            <Col xs={16} className={styles.content}>
-                {!!lastImage && <>
-                    <Button onClick={upscale} title="Upscale" disabled={upscaling.isLoading}>
-                        <Spin spinning={upscaling.isLoading}>
-                            <FullscreenOutlined /> Upscale
-                        </Spin>
-                    </Button>
-                    &nbsp;
-                    <Popconfirm title="Are you sure you want to delete this file?" onConfirm={deleteFile}>
-                        <Button type="primary" danger><DeleteOutlined /> Delete</Button>
-                    </Popconfirm>
-                    <br/><br/>
-                    <div className={styles.imgContainer}>
-                        <img src={`${apiBase}/${lastImage}`} />
-                    </div>
-                </>}
+            <Col xs={16}>
+                <CurrentImage />
             </Col>
         </Row>
         

@@ -1,6 +1,8 @@
 import { useSharedState } from "unstateless";
 
 export const useStandardParams = () => {
+    const [prompt, setPrompt]                           = useSharedState("prompt",              ""      )();
+    const [negativePrompt, setNegativePrompt]           = useSharedState("negativePrompt",      ""      )();
     const [seed, setSeed]                               = useSharedState("seed",                0       )();
     const [width, setWidth]                             = useSharedState("width",               512     )();
     const [height, setHeight]                           = useSharedState("height",              512     )();
@@ -16,6 +18,8 @@ export const useStandardParams = () => {
     const [controlNetStrength, setControlNetStrength]   = useSharedState("controlNetStrength",  1.0     )();
 
     const values = {
+        prompt,
+        negativePrompt,
         seed,
         width,
         height,
@@ -33,6 +37,8 @@ export const useStandardParams = () => {
 
     return {
         ...values,
+        setPrompt,
+        setNegativePrompt,
         setSeed,
         setWidth,
         setHeight,
