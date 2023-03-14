@@ -12,8 +12,10 @@ from diffusers.schedulers import (DDIMScheduler, DDPMScheduler,
 from fastapi import APIRouter
 from src.lib.status import Status, event
 from src.lib.control_net import getControlNetImage, getControlNetPipeline
+from src.lib.format_convert import safetensors_to_bin
 from src.routers.files import outputFilePath
 from diffusers.utils import load_image
+from src.routers.options import loraFilePath
 import PIL
 
 router = APIRouter()
@@ -24,7 +26,7 @@ def step(step:int, timestep:int, latents:torch.FloatTensor):
     status.updateIter(step)
     if event.is_set():
         warning("Cancelled")
-        raise "Image cancelled"
+        raise Exception("Image cancelled")
 
 @router.get("/txt2img")
 def txt2imgHandler(
@@ -32,7 +34,8 @@ def txt2imgHandler(
     sourceImage:str = None, sourceImageStrength:float=0.5, maskImage:str = None,
     width:int=512, height:int=512,
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
-    controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
+    controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0,
+    loraFile:str = None, loraStrength:float = 0.5
 ):
     event.clear()
 
@@ -59,6 +62,15 @@ def txt2imgHandler(
     }[sampler].from_config(pipe.scheduler.config)
     pipe.scheduler = scheduler
 
+    if loraFile:
+        basePath = os.getcwd() + "\\" + loraFilePath + "\\" + loraFile
+        binPath = basePath + ".bin"
+        sftPath = basePath + ".safetensors"
+        if not os.path.exists(binPath):
+            safetensors_to_bin(sftPath, binPath)
+           
+        pipe.unet.load_attn_procs(binPath, weight_name=binPath)
+
     pipe = pipe.to("cuda")
 
     # Generate the image
@@ -74,7 +86,7 @@ def txt2imgHandler(
                 image=getControlNetImage(controlNetImage, preprocessor),
                 controlnet_conditioning_scale=controlNetStrength,
                 generator=generator,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 callback=step,
             ).images[0] if (controlNetImage != None) & (source == None) else\
             pipe( # img2img with controlnet
@@ -85,7 +97,7 @@ def txt2imgHandler(
                 strength=sourceImageStrength,
                 controlnet_conditioning_scale=controlNetStrength,
                 generator=generator,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 callback=step,
             ).images[0] if (controlNetImage != None) & (source != None) & (mask == None) else\
             pipe( # inpainting with controlnet
@@ -97,13 +109,13 @@ def txt2imgHandler(
                 strength=sourceImageStrength,
                 controlnet_conditioning_scale=controlNetStrength,
                 generator=generator,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 callback=step,
             ).images[0] if (controlNetImage != None) & (source != None) & (mask != None) else\
             pipe( # txt2img
                 prompt, negative_prompt=negativePrompt, width=width, height=height,
                 num_inference_steps=numSteps, guidance_scale=cfgScale,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 generator=generator,
                 callback=step,
             ).images[0] if (source == None) else\
@@ -112,7 +124,7 @@ def txt2imgHandler(
                 num_inference_steps=numSteps, guidance_scale=cfgScale,
                 image=source,
                 strength=sourceImageStrength,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 generator=generator,
                 callback=step,
             ).images[0] if (mask == None) else\
@@ -122,17 +134,18 @@ def txt2imgHandler(
                 image=source,
                 mask_image=mask,
                 strength=sourceImageStrength,
-                # scheduler=scheduler,
+                cross_attention_kwargs={"scale": loraStrength},
                 generator=generator,
                 callback=step,
             ).images[0]
 
             # Save the final image
             status.updateStatus("Saving image")
-            fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
+            fileName = outputFilePath + "\\" + prompt.replace(",", "").replace("(", "").replace(")", "")[0:50] + "-{}".format(randint(0, 1000000)) + ".png"
             status.updateLastImage(fileName)
             image.save(fileName)
-    except:
+    except Exception as e:
+        warning(e)
         status.done()
         return {"img": ""}
 

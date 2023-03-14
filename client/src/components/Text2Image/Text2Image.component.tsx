@@ -4,12 +4,13 @@ import { truncate } from '@/lib/truncate';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, CheckCircleTwoTone, CloseCircleOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { BranchesOutlined, BulbOutlined, CheckCircleTwoTone, CloseCircleOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Col, Collapse, Input, Row, Typography } from 'antd';
 import { AdvancedOptions } from '../AdvancedOptions';
 import { ControlNet } from '../ControlNet';
 import { preprocessors } from '../ControlNet/ControlNet.component';
 import { CurrentImage } from '../CurrentImage';
+import { LoraSelector } from '../LoraSelector';
 import { MaskImageUploader } from '../MaskImageUploader';
 import { Prompts } from '../Prompts';
 import { SourceImageUploader } from '../SourceImageUploader';
@@ -29,6 +30,7 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
         prompt, negativePrompt,
         width, height, cfgScale, numSteps,
         sourceImage, maskImage, controlNetImage, preprocessor,
+        loraFile, loraStrength,
         seed, sampler,
         setSeed, values
     } = useStandardParams();
@@ -110,6 +112,9 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                         extra={!!controlNetImage && <>{preprocessors[preprocessor]} <CheckCircleTwoTone twoToneColor="green" /></>}
                     >
                         <ControlNet />
+                    </Collapse.Panel>
+                    <Collapse.Panel key="lora" header={<><BranchesOutlined /> LoRA</>} extra={!!loraFile ? <>{loraFile}&nbsp;&nbsp;{loraStrength}</> : undefined}>
+                        <LoraSelector />
                     </Collapse.Panel>
                     <Collapse.Panel key="advanced" header={<><ControlOutlined /> Advanced Options</>} extra={<>{sampler}&nbsp;&nbsp;s:{seed}</>}>
                         <AdvancedOptions />

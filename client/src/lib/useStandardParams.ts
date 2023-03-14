@@ -15,13 +15,16 @@ export const useStandardParams = () => {
     const [controlNetImage, setControlNetImage]         = useSharedState("controlNetImage",     ""      )();
     const [preprocessor, setPreprocessor]               = useSharedState("preprocessor",        ""      )();
     const [controlNetStrength, setControlNetStrength]   = useSharedState("controlNetStrength",  1.0     )();
+    const [loraFile, setLoraFile]                       = useSharedState("loraFile",            ""      )();
+    const [loraStrength, setLoraStrength]               =useSharedState("loraStrength",         0.5     )();
 
     const values = {
         prompt, negativePrompt, seed,
         width, height,
         sourceImage, maskImage, sourceImageStrength,
         cfgScale, numSteps, sampler,
-        controlNetImage, preprocessor, controlNetStrength
+        controlNetImage, preprocessor, controlNetStrength,
+        loraFile, loraStrength
     };
 
     return {
@@ -31,6 +34,7 @@ export const useStandardParams = () => {
         setSourceImage, setMaskImage, setSourceImageStrength,
         setCfgScale, setNumSteps, setSampler,
         setControlNetImage, setPreprocessor, setControlNetStrength,
+        setLoraFile, setLoraStrength,
         values: () => values,
     };
 }

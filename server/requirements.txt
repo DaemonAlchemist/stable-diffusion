@@ -1,5 +1,5 @@
 # TODO:  install torch with CUDA support (also possibly uninstall torch with CPU support)
-diffusers[torch]
+git+https://github.com/huggingface/diffusers
 opencv-contrib-python
 scipy
 fastapi[all]

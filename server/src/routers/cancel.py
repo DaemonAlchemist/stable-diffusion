@@ -1,8 +1,7 @@
 from fastapi import APIRouter
-from src.lib.status import Status, event
+from src.lib.status import event
 
 router = APIRouter()
-status = Status()
 
 @router.get("/cancel")
 def getHandler():
