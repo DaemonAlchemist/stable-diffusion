@@ -4,6 +4,7 @@ import {StatusBarProps} from "./StatusBar.d";
 import styles from './StatusBar.module.scss';
 import {Progress} from 'antd';
 import { useLastImage } from '@/lib/useLastImage';
+import { useSharedState } from 'unstateless';
 
 interface IStatus {
     maxIterations: number;
@@ -13,8 +14,10 @@ interface IStatus {
     lastImage: string;
 }
 
+export const useStatus = useSharedState<IStatus | null>(null);
+
 export const StatusBarComponent = (props:StatusBarProps) => {
-    const [status, setStatus] = useState<IStatus | null>(null);
+    const [status, setStatus] = useStatus();
     const [, setLastImage] = useLastImage();
 
     const refresh = () => {

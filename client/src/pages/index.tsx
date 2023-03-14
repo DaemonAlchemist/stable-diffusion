@@ -10,7 +10,7 @@ export default function Home() {
 
   return <ConfigProvider
     theme={{
-      algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      algorithm: dark ? [theme.darkAlgorithm, theme.compactAlgorithm] : [theme.defaultAlgorithm, theme.compactAlgorithm],
     }}
   >
     <Layout className={styles.app}>

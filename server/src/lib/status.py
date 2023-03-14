@@ -1,3 +1,6 @@
+from threading import Event
+
+event = Event()
 
 class Status:
     maxIterations:int = 1

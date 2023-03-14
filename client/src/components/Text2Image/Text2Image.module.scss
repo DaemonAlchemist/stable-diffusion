@@ -4,13 +4,18 @@
     .createButtons {
         text-align: right;
         margin-bottom: $paddingDefault;
-        button:nth-child(2) {
+        button.redoButton {
             border-radius: 0;
             border-right: solid 1px #ffffff;
         }
-        button:nth-child(3) {
+        button.createButton {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+        }
+        button.cancelButton {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            width: 72px;
         }
         input {
             border-top-right-radius: 0;

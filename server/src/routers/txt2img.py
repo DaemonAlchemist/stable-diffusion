@@ -10,7 +10,7 @@ from diffusers.schedulers import (DDIMScheduler, DDPMScheduler,
                                   EulerDiscreteScheduler, LMSDiscreteScheduler,
                                   PNDMScheduler)
 from fastapi import APIRouter
-from src.lib.status import Status
+from src.lib.status import Status, event
 from src.lib.control_net import getControlNetImage, getControlNetPipeline
 from src.routers.files import outputFilePath
 from diffusers.utils import load_image
@@ -22,6 +22,9 @@ status = Status()
 # define a function to update the iteration status
 def step(step:int, timestep:int, latents:torch.FloatTensor):
     status.updateIter(step)
+    if event.is_set():
+        warning("Cancelled")
+        raise "Image cancelled"
 
 @router.get("/txt2img")
 def txt2imgHandler(
@@ -31,6 +34,8 @@ def txt2imgHandler(
     numSteps:int=150, cfgScale:float = 7.5, sampler:str = "DDIM",
     controlNetImage:str = None, preprocessor:str = None, controlNetStrength:float = 1.0
 ):
+    event.clear()
+
     source = load_image(os.getcwd() + "\\" + sourceImage) if sourceImage else None
     mask   = load_image(os.getcwd() + "\\" + maskImage  ) if maskImage   else None
 
@@ -57,75 +62,79 @@ def txt2imgHandler(
     pipe = pipe.to("cuda")
 
     # Generate the image
-    for x in range(numImages):
-        status.updateIter(0)
-        status.updateStatus("Generating")
-        generator = torch.Generator("cuda").manual_seed(seed)
-        seed+=1
-        image = pipe( # txt2img with controlnet
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            image=getControlNetImage(controlNetImage, preprocessor),
-            controlnet_conditioning_scale=controlNetStrength,
-            generator=generator,
-            # scheduler=scheduler,
-            callback=step,
-        ).images[0] if (controlNetImage != None) & (source == None) else\
-        pipe( # img2img with controlnet
-            prompt, negative_prompt=negativePrompt,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
-            image=source,
-            strength=sourceImageStrength,
-            controlnet_conditioning_scale=controlNetStrength,
-            generator=generator,
-            # scheduler=scheduler,
-            callback=step,
-        ).images[0] if (controlNetImage != None) & (source != None) & (mask == None) else\
-        pipe( # inpainting with controlnet
-            prompt, negative_prompt=negativePrompt,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
-            image=source,
-            mask_image=mask,
-            strength=sourceImageStrength,
-            controlnet_conditioning_scale=controlNetStrength,
-            generator=generator,
-            # scheduler=scheduler,
-            callback=step,
-        ).images[0] if (controlNetImage != None) & (source != None) & (mask != None) else\
-        pipe( # txt2img
-            prompt, negative_prompt=negativePrompt, width=width, height=height,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            # scheduler=scheduler,
-            generator=generator,
-            callback=step,
-        ).images[0] if (source == None) else\
-        pipe( # img2img
-            prompt, negative_prompt=negativePrompt,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            image=source,
-            strength=sourceImageStrength,
-            # scheduler=scheduler,
-            generator=generator,
-            callback=step,
-        ).images[0] if (mask == None) else\
-        pipe( # inpainting
-            prompt, negative_prompt=negativePrompt,
-            num_inference_steps=numSteps, guidance_scale=cfgScale,
-            image=source,
-            mask_image=mask,
-            strength=sourceImageStrength,
-            # scheduler=scheduler,
-            generator=generator,
-            callback=step,
-        ).images[0]
+    try:
+        for x in range(numImages):
+            status.updateIter(0)
+            status.updateStatus("Generating")
+            generator = torch.Generator("cuda").manual_seed(seed)
+            seed+=1
+            image = pipe( # txt2img with controlnet
+                prompt, negative_prompt=negativePrompt, width=width, height=height,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                image=getControlNetImage(controlNetImage, preprocessor),
+                controlnet_conditioning_scale=controlNetStrength,
+                generator=generator,
+                # scheduler=scheduler,
+                callback=step,
+            ).images[0] if (controlNetImage != None) & (source == None) else\
+            pipe( # img2img with controlnet
+                prompt, negative_prompt=negativePrompt,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
+                image=source,
+                strength=sourceImageStrength,
+                controlnet_conditioning_scale=controlNetStrength,
+                generator=generator,
+                # scheduler=scheduler,
+                callback=step,
+            ).images[0] if (controlNetImage != None) & (source != None) & (mask == None) else\
+            pipe( # inpainting with controlnet
+                prompt, negative_prompt=negativePrompt,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                controlnet_conditioning_image=getControlNetImage(controlNetImage, preprocessor),
+                image=source,
+                mask_image=mask,
+                strength=sourceImageStrength,
+                controlnet_conditioning_scale=controlNetStrength,
+                generator=generator,
+                # scheduler=scheduler,
+                callback=step,
+            ).images[0] if (controlNetImage != None) & (source != None) & (mask != None) else\
+            pipe( # txt2img
+                prompt, negative_prompt=negativePrompt, width=width, height=height,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                # scheduler=scheduler,
+                generator=generator,
+                callback=step,
+            ).images[0] if (source == None) else\
+            pipe( # img2img
+                prompt, negative_prompt=negativePrompt,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                image=source,
+                strength=sourceImageStrength,
+                # scheduler=scheduler,
+                generator=generator,
+                callback=step,
+            ).images[0] if (mask == None) else\
+            pipe( # inpainting
+                prompt, negative_prompt=negativePrompt,
+                num_inference_steps=numSteps, guidance_scale=cfgScale,
+                image=source,
+                mask_image=mask,
+                strength=sourceImageStrength,
+                # scheduler=scheduler,
+                generator=generator,
+                callback=step,
+            ).images[0]
 
-        # Save the final image
-        status.updateStatus("Saving image")
-        fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
-        status.updateLastImage(fileName)
-        image.save(fileName)
+            # Save the final image
+            status.updateStatus("Saving image")
+            fileName = outputFilePath + "\\{}-{}.png".format(prompt, randint(0, 1000000))
+            status.updateLastImage(fileName)
+            image.save(fileName)
+    except:
+        status.done()
+        return {"img": ""}
 
     # Update the status
     status.done()

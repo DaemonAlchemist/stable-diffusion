@@ -4,9 +4,8 @@ import { truncate } from '@/lib/truncate';
 import { useInput } from '@/lib/useInput';
 import { useLastImage } from '@/lib/useLastImage';
 import { useStandardParams } from '@/lib/useStandardParams';
-import { BulbOutlined, CheckCircleTwoTone, CheckOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
+import { BulbOutlined, CheckCircleTwoTone, CloseCircleOutlined, ControlOutlined, EditOutlined, ExpandOutlined, PictureOutlined, ReloadOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button, Col, Collapse, Input, Row, Typography } from 'antd';
-import { pipe, prop } from 'ts-functional';
 import { AdvancedOptions } from '../AdvancedOptions';
 import { ControlNet } from '../ControlNet';
 import { preprocessors } from '../ControlNet/ControlNet.component';
@@ -16,12 +15,15 @@ import { Prompts } from '../Prompts';
 import { SourceImageUploader } from '../SourceImageUploader';
 import { StandardParameters } from '../StandardParameters';
 import { StatusBar } from '../StatusBar';
+import { useStatus } from '../StatusBar/StatusBar.component';
 import { Text2ImageProps } from "./Text2Image.d";
 import styles from './Text2Image.module.scss';
 
 
 export const Text2ImageComponent = (props:Text2ImageProps) => {
     const [, setLastImage] = useLastImage();
+    const [status] = useStatus();
+
     const [numImages, setNumImages] = useInput("1");
     const {
         prompt, negativePrompt,
@@ -31,15 +33,29 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
         setSeed, values
     } = useStandardParams();
 
+    const updateImage = (res:any) => {
+        if(res.img) {
+            setLastImage(res.img);
+        }
+    }
+
     const onCreate = () => {
         const newSeed = getRandomInt(0, Number.MAX_SAFE_INTEGER);
         setSeed(newSeed);
-        api.get("txt2img", {numImages, ...values(), newSeed}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {numImages, ...values(), newSeed}).then(updateImage);
     }
 
     const onRedo = () => {
-        api.get("txt2img", {numImages, ...values()}).then(pipe(prop<any, any>("img"), setLastImage));
+        api.get("txt2img", {numImages, ...values()}).then(updateImage);
     }
+
+    const onCancel = () => {
+        api.get("cancel", {}).then(() => {
+            console.log("Image cancelled");
+        })
+    }
+
+    const isRunning = status?.status !== "Ready";
 
     return <div className={styles.txt2Img}>
         <Row gutter={24}>
@@ -50,12 +66,17 @@ export const Text2ImageComponent = (props:Text2ImageProps) => {
                     </Col>
                     <Col xs={24} className={styles.createButtons}>
                         <Input addonBefore="Create image(s)" type="number" style={{width: 200}} value={+numImages} onChange={setNumImages}/>
-                        <Button type="primary" onClick={onRedo} title="Reuse the last seed">
-                            <ReloadOutlined />
-                        </Button>
-                        <Button type="primary" onClick={onCreate} title="Create with a new seed">
-                            <SendOutlined />
-                        </Button>
+                        {!isRunning && <>
+                            <Button className={styles.redoButton} type="primary" onClick={onRedo} title="Reuse the last seed">
+                                <ReloadOutlined />
+                            </Button>
+                            <Button className={styles.createButton} type="primary" onClick={onCreate} title="Create with a new seed">
+                                <SendOutlined />
+                            </Button>
+                        </>}
+                        {isRunning && <Button className={styles.cancelButton} type="primary" danger onClick={onCancel} title="Cancel the image">
+                            <CloseCircleOutlined />
+                        </Button>}
                     </Col>
                 </Row>
                 <Collapse defaultActiveKey={["prompt", "params"]}>
